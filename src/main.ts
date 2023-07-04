@@ -27,29 +27,31 @@ async function bootstrap() {
     })
   );
 
-  SwaggerModule.setup(
-    '/docs',
-    app,
-    SwaggerModule.createDocument(
+  if (process.env.MODE === 'dev') {
+    SwaggerModule.setup(
+      '/docs',
       app,
-      new DocumentBuilder()
-        .setTitle('Medicon record API')
-        .setDescription('Nestjs, Typeorm, Swagger')
-        .setVersion('1.0')
-        .addBearerAuth(
-          {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-            name: 'JWT',
-            description: 'JWT Token',
-            in: 'header',
-          },
-          'Access Token'
-        )
-        .build()
-    )
-  );
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder()
+          .setTitle('Medicon record API')
+          .setDescription('Nestjs, Typeorm, Swagger')
+          .setVersion('1.0')
+          .addBearerAuth(
+            {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'JWT',
+              name: 'JWT',
+              description: 'JWT Token',
+              in: 'header',
+            },
+            'Access Token'
+          )
+          .build()
+      )
+    );
+  }
 
   await app.listen(process.env.SWAGGER_PORT || 4000);
 }
