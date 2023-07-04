@@ -64,8 +64,8 @@ export class UserEntity extends CommonEntity {
   public avatarId?: string;
 
   @Column({ type: 'json', nullable: true })
-  @ApiProperty({ type: 'array', items: { type: 'string', format: 'binary' }, required: false })
+  @ApiProperty({ type: 'array', items: { type: 'string' }, required: false })
   @IsOptional()
   @IsString({ each: true })
-  bookmark: string[];
+  bookmark: string;
 }

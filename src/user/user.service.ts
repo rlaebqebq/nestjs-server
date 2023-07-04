@@ -57,9 +57,12 @@ export class UserService {
     }
 
     if (bookmark) {
+      const bookmarkArrUnique = bookmark.split(',').filter((val, idx) => {
+        return bookmark.split(',').indexOf(val) === idx;
+      });
       const projects = await this.project.find();
 
-      const isProjectExist = bookmark.every((bookmarkId) => {
+      const isProjectExist = bookmarkArrUnique.every((bookmarkId) => {
         return projects.some((project) => project.id === bookmarkId);
       });
       if (!isProjectExist) throw new NotFoundException(`NotFound ${id}`);
