@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as fs from 'fs';
 
 import { GetUploadDto } from './upload.dto';
 import { UploadEntity } from './upload.entity';
@@ -37,30 +36,9 @@ export class UploadService {
       own,
     } = params;
 
-    if (!fs.existsSync(`uploads/${own}`)) {
-      fs.mkdirSync(`uploads/${own}`, { recursive: true });
-    }
-    const returnpath = `uploads/${own}/${filename}`;
-    const uploadPath = __dirname + `/../../${returnpath}`;
-    await fs.writeFileSync(uploadPath, path);
-
-    const newfilename = `${new Date().toISOString()}_${filename}`;
-
-    const newFile = await this.upload.create({ filename: newfilename, path: returnpath, mimetype, own });
+    const newFile = await this.upload.create({ filename, path, mimetype, own });
     await this.upload.save(newFile);
     return newFile;
-  }
-
-  async getFileById(path: string) {
-    console.log('path', path);
-    const file = await this.upload.findOneBy({ path });
-    const uploadPath = __dirname + `/../../${file.path}`;
-    const retrievedFile = fs.readFileSync(uploadPath, 'utf-8');
-
-    if (!file && !retrievedFile) {
-      throw new NotFoundException();
-    }
-    return retrievedFile;
   }
 
   async findAll(id: string): Promise<GetUploadDto[]> {

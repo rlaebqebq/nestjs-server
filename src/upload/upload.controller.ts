@@ -14,6 +14,7 @@ import {
 } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
+import { join } from 'path';
 
 import { CommonApiDocs } from 'common/common.docs';
 import { CommonResponse } from 'common/common.response';
@@ -75,7 +76,6 @@ export class UploadController {
   @ApiOkResponse({ ...CommonResponse.FindOneOkResponse(), type: UploadDto })
   @ApiNotFoundResponse(CommonResponse.NotFoundException())
   async findOne(@Res() res: Response, @Param('path') path: string) {
-    res.sendFile(await this.service.getFileById(path));
-    // res.download(await this.service.getFileById(path));
+    res.sendFile(join(process.cwd(), path));
   }
 }
