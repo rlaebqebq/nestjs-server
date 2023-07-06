@@ -22,7 +22,8 @@ import { CurrentUser } from 'auth/user.decorator';
 import { UserEntity } from 'user/user.entity';
 
 import { ProjectService } from './project.service';
-import { CreateProjectDto, ProjectDto, ProjectListDto, UpdateProjectDto } from './project.dto';
+import { CreateProjectDto, ProjectDto, UpdateProjectDto } from './project.dto';
+import { ProjectEntity } from './project.entity';
 
 @ApiTags('project')
 @Controller('project')
@@ -48,12 +49,40 @@ export class ProjectController {
 
   @Get()
   @ApiOperation(CommonApiDocs.FindAllOperation())
-  @ApiOkResponse({ ...CommonResponse.FindAllOkResponse(), type: ProjectListDto })
+  @ApiOkResponse({ ...CommonResponse.FindAllOkResponse(), type: ProjectEntity })
   @ApiQuery({ name: 'search', type: String, required: false })
   @ApiQuery({ name: 'view', type: Number, required: false })
-  @ApiQuery({ name: 'page', type: Number, required: false })
-  async findAll(@Query('search') search?: string, @Query('view') view?: number, @Query('page') page?: number) {
-    return await this.service.findAll({ search, view, page });
+  @ApiQuery({ name: 'pageParam', type: Number, required: false })
+  @ApiQuery({ name: 'orderBy', type: String, required: false })
+  async findAll(
+    @Query('search') search?: string,
+    @Query('view') view?: number,
+    @Query('pageParam') pageParam?: number,
+    @Query('orderBy') orderBy?: string
+  ) {
+    return await this.service.findAll({ search, view, pageParam, orderBy });
+  }
+
+  @Get('own')
+  @ApiOperation(CommonApiDocs.FindAllOperation())
+  @ApiOkResponse({ ...CommonResponse.FindAllOkResponse(), type: ProjectEntity })
+  @ApiBearerAuth('Access Token')
+  @Member(true)
+  @UseGuards(JWTAuthGuard)
+  @ApiUnauthorizedResponse(CommonResponse.UnauthorizedException())
+  @ApiForbiddenResponse(CommonResponse.ForbiddenException())
+  @ApiQuery({ name: 'search', type: String, required: false })
+  @ApiQuery({ name: 'view', type: Number, required: false })
+  @ApiQuery({ name: 'pageParam', type: Number, required: false })
+  @ApiQuery({ name: 'orderBy', type: String, required: false })
+  async findAllMine(
+    @CurrentUser() { id }: UserEntity,
+    @Query('search') search?: string,
+    @Query('view') view?: number,
+    @Query('pageParam') pageParam?: number,
+    @Query('orderBy') orderBy?: string
+  ) {
+    return await this.service.findAll({ id, search, view, pageParam, orderBy });
   }
 
   @Get(':id')

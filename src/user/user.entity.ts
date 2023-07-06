@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
-import { IsOptional, IsString } from 'class-validator';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { IsString } from 'class-validator';
 
 import { CommonEntity } from 'common/common.entity';
-import { UploadEntity } from 'upload/upload.entity';
+import { ProjectEntity } from 'project/project.entity';
 
 @Entity({
   name: 'user',
@@ -50,22 +50,20 @@ export class UserEntity extends CommonEntity {
   })
   nickname: string;
 
-  @JoinColumn({ name: 'avatarId' })
-  @OneToOne(() => UploadEntity, (i: UploadEntity) => i.own, {
-    nullable: true,
-  })
-  public avatar?: UploadEntity;
-
   @ApiProperty({
     example: '',
   })
   @IsString()
   @Column({ type: 'text', nullable: true })
-  public avatarId?: string;
+  avatarId?: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column({
+    type: 'simple-array',
+  })
   @ApiProperty({ type: 'array', items: { type: 'string' }, required: false })
-  @IsOptional()
   @IsString({ each: true })
-  bookmark: string;
+  bookmark: string | string[];
+
+  @OneToMany(() => ProjectEntity, (i) => i.registerBy)
+  projects: ProjectEntity[];
 }

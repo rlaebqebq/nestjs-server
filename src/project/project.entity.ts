@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, CreateDateColumn, Entity } from 'typeorm';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { IsDateString, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 import { CommonEntity } from 'common/common.entity';
+import { UserEntity } from 'user/user.entity';
 
 @Entity({
   name: 'project',
@@ -30,28 +31,62 @@ export class ProjectEntity extends CommonEntity {
   @Column({
     type: 'simple-array',
   })
-  @ApiProperty({})
+  @ApiProperty({ type: 'array', items: { type: 'string' }, required: true })
   @IsString({ each: true })
   @IsNotEmpty()
-  correspondence: string[];
+  correspondence: string;
 
   @CreateDateColumn({
     type: 'datetime',
   })
   @ApiProperty({
     example: '2022-07-13T04:22:24.489Z',
-    required: false,
+    required: true,
   })
+  @IsDateString()
+  @IsNotEmpty()
   published: Date;
 
-  @Column({ type: 'json', nullable: false })
-  @ApiProperty({ type: 'array', items: { type: 'string', format: 'binary' }, required: true, description: '파일 경로' })
-  @IsOptional()
+  @Column({
+    type: 'simple-array',
+  })
+  @ApiProperty({ type: 'array', items: { type: 'string' }, required: true })
   @IsString({ each: true })
-  imageFiles: string[];
+  @IsNotEmpty()
+  imageFiles: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  @IsString()
-  @IsOptional()
-  registerBy?: string;
+  @Column({ type: 'uuid', nullable: false })
+  registerById: string;
+
+  @ManyToOne(() => UserEntity, (i) => i.projects)
+  @JoinColumn({ name: 'registerById' })
+  registerBy: UserEntity;
+
+  @Column({
+    type: 'varchar',
+  })
+  thumbnail?: string;
+
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  viewCount?: number;
+
+  @Column({
+    type: 'int',
+    default: 0,
+  })
+  thumbCount?: number;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  setThumbnailFromImageFiles() {
+    if (this.imageFiles) {
+      const imageArray = this.imageFiles.split(',');
+      if (Array.isArray(imageArray) && imageArray.length > 0) {
+        this.thumbnail = imageArray[0];
+      }
+    }
+  }
 }

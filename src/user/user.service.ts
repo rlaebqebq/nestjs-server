@@ -41,7 +41,7 @@ export class UserService {
     await user.save();
   }
 
-  async update(id: string, update: UpdateUserDto) {
+  async update(id: string, update: UpdateUserDto): Promise<UpdateUserDto> {
     const { password, nickname, avatarId, bookmark } = update;
 
     if (password) update.password = await bcrypt.hash(update.password, 10);
@@ -57,15 +57,14 @@ export class UserService {
     }
 
     if (bookmark) {
-      const bookmarkArrUnique = bookmark.split(',').filter((val, idx) => {
-        return bookmark.split(',').indexOf(val) === idx;
-      });
-      const projects = await this.project.find();
-
-      const isProjectExist = bookmarkArrUnique.every((bookmarkId) => {
-        return projects.some((project) => project.id === bookmarkId);
-      });
-      if (!isProjectExist) throw new NotFoundException(`NotFound ${id}`);
+      // const bookmarkArrUnique = bookmark.filter((val, idx) => {
+      //   return bookmark.indexOf(val) === idx;
+      // });
+      // const projects = await this.project.find();
+      // const isProjectExist = bookmarkArrUnique.every((bookmarkId) => {
+      //   return projects.some((project) => project.id === bookmarkId);
+      // });
+      // if (!isProjectExist) throw new NotFoundException(`NotFound ${id}`);
     }
 
     const originUpdate = { ...update };
@@ -81,6 +80,6 @@ export class UserService {
     if (isUserExist) await this.user.update({ id }, update);
     else throw new NotFoundException(`NotFound ${id}`);
 
-    return { id, ...originUpdate };
+    return new UpdateUserDto(update);
   }
 }

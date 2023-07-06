@@ -5,8 +5,13 @@ import { IPagination, IPaginationParams } from 'type';
 
 import { UploadEntity } from 'upload/upload.entity';
 
-import { CreateProjectDto, ProjectDto } from './project.dto';
+import { CreateProjectDto, ProjectDto, ProjectListDto } from './project.dto';
 import { ProjectEntity } from './project.entity';
+
+interface IFindAll extends IPaginationParams {
+  id?: string;
+  orderBy?: string;
+}
 
 @Injectable()
 export class ProjectService {
@@ -21,41 +26,61 @@ export class ProjectService {
     private readonly upload: Repository<UploadEntity>
   ) {}
 
-  async create({ create, id }: { create: CreateProjectDto; id: string }): Promise<any> {
-    const { name, imageFiles } = create;
-    console.log(imageFiles);
-
+  async create({ create, id }: { create: CreateProjectDto; id: string }) {
+    const { name } = create;
     const isExist = await this.project.findOne({ where: { name }, select: { name: true } });
     if (isExist) throw new BadRequestException(`Duplicate name, ${name}`);
 
-    const newProject = this.project.create({ name, registerBy: id, imageFiles });
+    const newProject: CreateProjectDto = this.project.create({ ...create, registerById: id });
     await newProject.save();
+
     return newProject;
   }
 
-  async findAll({ search, view, page }: IPaginationParams): Promise<IPagination<ProjectDto[]>> {
-    let findOption: FindManyOptions = {};
+  async findAll({ search, view, pageParam, id, orderBy }: IFindAll): Promise<IPagination<ProjectListDto[]>> {
+    let findOption: FindManyOptions = { relations: ['registerBy'] };
     if (search) findOption = { where: { name: Like(`%${search}%`) } };
+    if (id) findOption = { ...findOption, where: { registerBy: id } };
+    if (orderBy) {
+      if (orderBy === 'viewCount') findOption = { ...findOption, order: { viewCount: 'DESC' } };
+    }
     if (view) {
       findOption = { ...findOption, take: view };
-      if (page) findOption = { ...findOption, skip: view * page };
+      if (pageParam) findOption = { ...findOption, skip: view * pageParam };
     }
 
     const [project, total] = await this.project.findAndCount(findOption);
     return {
       totalCount: total,
       totalPage: Math.ceil(total / view) || 1,
-      page: page || 0,
+      pageParam: pageParam || 0,
       view: view || total,
-      list: project.map((i) => new ProjectDto(i)),
+      list: project.map((i) => new ProjectListDto(i)),
     };
   }
 
   async findOne(id: string): Promise<ProjectDto> {
-    const project = await this.project.findOne({ where: { id } });
+    const project = await this.project.findOne({ where: { id }, relations: ['registerBy'] });
     if (!project) throw new NotFoundException(`NotFound ${id}`);
 
-    return new ProjectDto(project);
+    const { viewCount, registerBy, ...res } = project;
+    const partialRegisterBy = {
+      nickname: registerBy.nickname,
+      avatarId: registerBy.avatarId,
+    };
+    const view: ProjectEntity = {
+      viewCount: viewCount + 1,
+      registerBy: partialRegisterBy,
+      ...res,
+    } as ProjectEntity;
+
+    try {
+      await this.project.update(id, { viewCount: viewCount + 1 });
+    } catch (e) {
+      return e;
+    }
+
+    return new ProjectDto(view);
   }
 
   async update(id: string, update: Partial<CreateProjectDto>): Promise<Partial<ProjectDto>> {

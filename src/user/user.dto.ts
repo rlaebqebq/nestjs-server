@@ -10,13 +10,22 @@ export class UserDto extends PickType(UserEntity, ['email', 'isMember']) {
   }
 }
 
-export class GetUserDto extends PickType(UserEntity, ['email', 'avatarId', 'nickname', 'isMember']) {
+export class GetUserDto extends PickType(UserEntity, [
+  'email',
+  'avatarId',
+  'nickname',
+  'isMember',
+  'bookmark',
+  'projects',
+]) {
   constructor(user: UserEntity) {
     super();
     this.email = user.email;
     this.avatarId = user.avatarId;
     this.nickname = user.nickname;
     this.isMember = user.isMember;
+    this.bookmark = user.bookmark;
+    this.projects = user.projects;
   }
 }
 
@@ -31,5 +40,5 @@ export class JoinUserDto extends PickType(UserEntity, ['email', 'password', 'nic
 // }
 
 export class UpdateUserDto extends PartialType(
-  PickType(UserEntity, ['password', 'avatarId', 'nickname', 'bookmark'] as const)
+  PickType(UserEntity, ['password', 'avatarId', 'nickname', 'bookmark', 'projects'] as const)
 ) {}
