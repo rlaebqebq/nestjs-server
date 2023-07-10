@@ -1,12 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { IsDateString, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+import { IsDateString, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
 
 import { CommonEntity } from 'common/common.entity';
 import { UserEntity } from 'user/user.entity';
+import { BookmarkEntity } from 'bookmark/bookmark.entity';
 
 @Entity({
   name: 'project',
+  schema: 'public',
 })
 export class ProjectEntity extends CommonEntity {
   @ApiProperty({ required: true })
@@ -55,13 +66,6 @@ export class ProjectEntity extends CommonEntity {
   @IsNotEmpty()
   imageFiles: string;
 
-  @Column({ type: 'uuid', nullable: false })
-  registerById: string;
-
-  @ManyToOne(() => UserEntity, (i) => i.projects)
-  @JoinColumn({ name: 'registerById' })
-  registerBy: UserEntity;
-
   @Column({
     type: 'varchar',
   })
@@ -78,6 +82,16 @@ export class ProjectEntity extends CommonEntity {
     default: 0,
   })
   thumbCount?: number;
+
+  @OneToMany(() => BookmarkEntity, (i: BookmarkEntity) => i.project, {
+    nullable: false,
+  })
+  @IsUUID()
+  bookmarks: BookmarkEntity[];
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity;
 
   @BeforeInsert()
   @BeforeUpdate()

@@ -1,8 +1,15 @@
-import { OmitType, PickType } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PickType } from '@nestjs/swagger';
 
 import { ProjectEntity } from './project.entity';
+import { IsUUID } from 'class-validator';
 
 export class ProjectDto extends OmitType(ProjectEntity, ['createDt', 'updateDt', 'deleteDt']) {
+  @ApiProperty({
+    type: String,
+    example: '',
+  })
+  @IsUUID()
+  userId: string;
   constructor(t: ProjectEntity) {
     super();
     this.id = t.id;
@@ -12,7 +19,6 @@ export class ProjectDto extends OmitType(ProjectEntity, ['createDt', 'updateDt',
     this.published = t.published;
     this.viewCount = t.viewCount;
     this.thumbCount = t.thumbCount;
-    this.registerBy = t.registerBy;
   }
 }
 

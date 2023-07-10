@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, Like, Repository } from 'typeorm';
 import { IPagination, IPaginationParams } from 'type';
 
-import { UploadEntity } from 'upload/upload.entity';
+import { UploadFilesEntity } from 'uploadFiles/uploadFiles.entity';
 
 import { CreateProjectDto, ProjectDto, ProjectListDto } from './project.dto';
 import { ProjectEntity } from './project.entity';
+import { UserEntity } from 'user/user.entity';
 
 interface IFindAll extends IPaginationParams {
   id?: string;
@@ -18,29 +19,30 @@ export class ProjectService {
   constructor(
     @InjectRepository(ProjectEntity)
     private readonly project: Repository<ProjectEntity>,
-    //
-    // @InjectRepository(UserEntity)
-    // private readonly user: Repository<UserEntity>,
 
-    @InjectRepository(UploadEntity)
-    private readonly upload: Repository<UploadEntity>
+    @InjectRepository(UserEntity)
+    private readonly user: Repository<UserEntity>,
+
+    @InjectRepository(UploadFilesEntity)
+    private readonly upload: Repository<UploadFilesEntity>
   ) {}
 
   async create({ create, id }: { create: CreateProjectDto; id: string }) {
     const { name } = create;
     const isExist = await this.project.findOne({ where: { name }, select: { name: true } });
+    const isUserExist = await this.user.findOne({ where: { id } });
     if (isExist) throw new BadRequestException(`Duplicate name, ${name}`);
 
-    const newProject: CreateProjectDto = this.project.create({ ...create, registerById: id });
+    const newProject: CreateProjectDto = this.project.create({ ...create, user: isUserExist });
     await newProject.save();
 
     return newProject;
   }
 
   async findAll({ search, view, pageParam, id, orderBy }: IFindAll): Promise<IPagination<ProjectListDto[]>> {
-    let findOption: FindManyOptions = { relations: ['registerBy'] };
+    let findOption: FindManyOptions = { relations: ['user'] };
     if (search) findOption = { where: { name: Like(`%${search}%`) } };
-    if (id) findOption = { ...findOption, where: { registerBy: id } };
+    if (id) findOption = { ...findOption, where: { user: id } };
     if (orderBy) {
       if (orderBy === 'viewCount') findOption = { ...findOption, order: { viewCount: 'DESC' } };
     }
@@ -60,17 +62,14 @@ export class ProjectService {
   }
 
   async findOne(id: string): Promise<ProjectDto> {
-    const project = await this.project.findOne({ where: { id }, relations: ['registerBy'] });
+    const project = await this.project.findOne({ where: { id }, relations: ['user'] });
     if (!project) throw new NotFoundException(`NotFound ${id}`);
 
-    const { viewCount, registerBy, ...res } = project;
-    const partialRegisterBy = {
-      nickname: registerBy.nickname,
-      avatarId: registerBy.avatarId,
-    };
+    const { viewCount, user, ...res } = project;
+
     const view: ProjectEntity = {
       viewCount: viewCount + 1,
-      registerBy: partialRegisterBy,
+      user,
       ...res,
     } as ProjectEntity;
 
