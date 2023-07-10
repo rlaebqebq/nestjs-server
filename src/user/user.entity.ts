@@ -1,12 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity, OneToMany } from 'typeorm';
-import { IsString } from 'class-validator';
+import { Column, Entity, OneToMany, RelationId } from 'typeorm';
+import { IsString, IsUUID } from 'class-validator';
 
 import { CommonEntity } from 'common/common.entity';
 import { ProjectEntity } from 'project/project.entity';
+import { BookmarkEntity } from 'bookmark/bookmark.entity';
 
 @Entity({
   name: 'user',
+  schema: 'public',
 })
 export class UserEntity extends CommonEntity {
   @ApiProperty({
@@ -57,13 +59,20 @@ export class UserEntity extends CommonEntity {
   @Column({ type: 'text', nullable: true })
   avatarId?: string;
 
-  @Column({
-    type: 'simple-array',
-  })
-  @ApiProperty({ type: 'array', items: { type: 'string' }, required: false })
-  @IsString({ each: true })
-  bookmark: string | string[];
+  @RelationId((i: UserEntity) => i.bookmarks)
+  bookmarksId: string[];
 
-  @OneToMany(() => ProjectEntity, (i) => i.registerBy)
-  projects: ProjectEntity[];
+  @OneToMany(() => BookmarkEntity, (i: BookmarkEntity) => i.user, {
+    nullable: false,
+  })
+  @IsUUID()
+  bookmarks!: BookmarkEntity[];
+
+  @RelationId((i: UserEntity) => i.bookmarks)
+  projectsId: string[];
+
+  @OneToMany(() => ProjectEntity, (i) => i.user, {
+    nullable: false,
+  })
+  projects!: ProjectEntity[];
 }

@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { UploadEntity } from 'upload/upload.entity';
+import { UploadFilesEntity } from 'uploadFiles/uploadFiles.entity';
 import { ProjectEntity } from 'project/project.entity';
 
 import { JoinUserDto, UpdateUserDto } from './user.dto';
@@ -15,8 +15,8 @@ export class UserService {
     @InjectRepository(UserEntity)
     private readonly user: Repository<UserEntity>,
 
-    @InjectRepository(UploadEntity)
-    private readonly upload: Repository<UploadEntity>,
+    @InjectRepository(UploadFilesEntity)
+    private readonly upload: Repository<UploadFilesEntity>,
 
     @InjectRepository(ProjectEntity)
     private readonly project: Repository<ProjectEntity>
@@ -42,7 +42,7 @@ export class UserService {
   }
 
   async update(id: string, update: UpdateUserDto): Promise<UpdateUserDto> {
-    const { password, nickname, avatarId, bookmark } = update;
+    const { password, nickname, avatarId } = update;
 
     if (password) update.password = await bcrypt.hash(update.password, 10);
 
@@ -54,17 +54,6 @@ export class UserService {
     if (avatarId) {
       const isHisOwn = await this.upload.findOne({ where: { own: id, path: avatarId } });
       if (!isHisOwn) throw new BadRequestException();
-    }
-
-    if (bookmark) {
-      // const bookmarkArrUnique = bookmark.filter((val, idx) => {
-      //   return bookmark.indexOf(val) === idx;
-      // });
-      // const projects = await this.project.find();
-      // const isProjectExist = bookmarkArrUnique.every((bookmarkId) => {
-      //   return projects.some((project) => project.id === bookmarkId);
-      // });
-      // if (!isProjectExist) throw new NotFoundException(`NotFound ${id}`);
     }
 
     const originUpdate = { ...update };

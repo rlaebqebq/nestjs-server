@@ -42,7 +42,7 @@ export class UserController {
   @Post('login')
   @ApiOperation(UserApiDocs.LoginOperation())
   @ApiOkResponse(UserApiDocs.LoginOkRes())
-  @ApiUnauthorizedResponse(CommonResponse.UnauthorizedException())
+  @ApiNotFoundResponse(CommonResponse.NotFoundException())
   login(@Body() loginDto: AuthDto) {
     return this.authService.jwtLogin(loginDto);
   }
