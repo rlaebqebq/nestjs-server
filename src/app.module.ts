@@ -15,8 +15,9 @@ import { MemberGuard } from 'auth/member.guard.service';
 import { AuthModule } from 'auth/auth.module';
 import { UserModule } from 'user/user.module';
 import { ProjectModule } from 'project/project.module';
-import { UploadModule } from 'upload/upload.module';
+import { UploadFilesModule } from 'uploadFiles/uploadFiles.module';
 import { ImageModule } from 'image/image.module';
+import { BookmarkModule } from 'bookmark/bookmark.module';
 
 import { AppController } from 'app.controller';
 import { AppService } from 'app.service';
@@ -37,7 +38,10 @@ import { AppService } from 'app.service';
         namingStrategy: new SnakeNamingStrategy(),
         autoLoadEntities: true,
         entities: [__dirname + '*.entity{.ts,.js}'],
-        synchronize: process.env.MODE == 'dev', //! set 'false' in production
+        // synchronize: process.env.MODE == 'dev', //! set 'false' in production
+        // dropSchema: true,
+        synchronize: true,
+        migrationsRun: true,
         logging: process.env.MODE == 'dev',
       }),
     }),
@@ -65,8 +69,9 @@ import { AppService } from 'app.service';
     AuthModule,
     UserModule,
     ProjectModule,
-    UploadModule,
+    UploadFilesModule,
     ImageModule,
+    BookmarkModule,
   ],
   controllers: [AppController],
   providers: [
