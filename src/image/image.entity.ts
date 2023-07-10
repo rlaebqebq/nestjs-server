@@ -6,6 +6,7 @@ import { CommonEntity } from 'common/common.entity';
 
 @Entity({
   name: 'image',
+  schema: 'public',
 })
 export class ImageEntity extends CommonEntity {
   @OneToOne(() => ProjectEntity, (i: ProjectEntity) => i.id, {
