@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
@@ -23,12 +23,8 @@ export class AuthService {
     const { email, password } = loginDto;
     const user = await this.jwtStrategy.validate(loginDto);
 
-    if (!user) throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
-
     const isValiedPassword: boolean = await bcrypt.compare(password, user.password);
-    if (!isValiedPassword) {
-      throw new UnauthorizedException('이메일 또는 비밀번호를 확인해주세요.');
-    }
+    if (!isValiedPassword) throw new NotFoundException('비밀번호를 확인해주세요.');
 
     const payload: Payload = { sub: user.id, email, isMember: user.isMember };
     const token = this.jwtService.sign(payload);
