@@ -5,9 +5,10 @@ import { IsOptional, IsString, IsUUID } from 'class-validator';
 import { CommonEntity } from 'common/common.entity';
 
 @Entity({
-  name: 'upload',
+  name: 'upload_files',
+  schema: 'public',
 })
-export class UploadEntity extends CommonEntity {
+export class UploadFilesEntity extends CommonEntity {
   @IsString()
   @Column({
     type: 'varchar',

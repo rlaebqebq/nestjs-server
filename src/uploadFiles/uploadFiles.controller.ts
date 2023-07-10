@@ -24,15 +24,15 @@ import { JWTAuthGuard } from 'auth/jwt.guard';
 import { CurrentUser } from 'auth/user.decorator';
 import { UserEntity } from 'user/user.entity';
 
-import { UploadService } from './upload.service';
-import { FilesUploadEntity } from './upload.entity';
-import { GetUploadDto, UploadDto } from './upload.dto';
+import { UploadFilesService } from './uploadFiles.service';
+import { FilesUploadEntity } from './uploadFiles.entity';
+import { GetUploadDto, UploadFilesDto } from './uploadFiles.dto';
 
 @ApiTags('upload')
 @Controller('upload')
-export class UploadController {
+export class UploadFilesController {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor(private readonly service: UploadService) {}
+  constructor(private readonly service: UploadFilesService) {}
 
   @Post()
   @ApiOperation(CommonApiDocs.CreateOperation())
@@ -73,7 +73,7 @@ export class UploadController {
 
   @Get(':path')
   @ApiOperation(CommonApiDocs.FindFileOneOperation())
-  @ApiOkResponse({ ...CommonResponse.FindOneOkResponse(), type: UploadDto })
+  @ApiOkResponse({ ...CommonResponse.FindOneOkResponse(), type: UploadFilesDto })
   @ApiNotFoundResponse(CommonResponse.NotFoundException())
   async findOne(@Res() res: Response, @Param('path') path: string) {
     res.sendFile(join(process.cwd(), path));

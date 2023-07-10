@@ -2,14 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { GetUploadDto } from './upload.dto';
-import { UploadEntity } from './upload.entity';
+import { GetUploadDto } from './uploadFiles.dto';
+import { UploadFilesEntity } from './uploadFiles.entity';
 
 @Injectable()
-export class UploadService {
+export class UploadFilesService {
   constructor(
-    @InjectRepository(UploadEntity)
-    private readonly upload: Repository<UploadEntity>
+    @InjectRepository(UploadFilesEntity)
+    private readonly upload: Repository<UploadFilesEntity>
   ) {}
 
   async findOne(name: string) {
