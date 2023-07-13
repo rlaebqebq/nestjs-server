@@ -16,7 +16,7 @@ import { AuthModule } from 'auth/auth.module';
 import { UserModule } from 'user/user.module';
 import { ProjectModule } from 'project/project.module';
 import { UploadFilesModule } from 'uploadFiles/uploadFiles.module';
-import { ImageModule } from 'image/image.module';
+import { AttachFilesModule } from 'attachFiles/attachFiles.module';
 import { BookmarkModule } from 'bookmark/bookmark.module';
 
 import { AppController } from 'app.controller';
@@ -70,8 +70,8 @@ import { AppService } from 'app.service';
     UserModule,
     ProjectModule,
     UploadFilesModule,
-    ImageModule,
     BookmarkModule,
+    AttachFilesModule,
   ],
   controllers: [AppController],
   providers: [
