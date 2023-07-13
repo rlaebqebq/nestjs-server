@@ -24,14 +24,13 @@ import { JWTAuthGuard } from 'auth/jwt.guard';
 import { CurrentUser } from 'auth/user.decorator';
 import { UserEntity } from 'user/user.entity';
 
-import { UploadFilesService } from './uploadFiles.service';
-import { FilesUploadEntity } from './uploadFiles.entity';
-import { GetUploadDto, UploadFilesDto } from './uploadFiles.dto';
+import { UploadFilesService } from 'uploadFiles/uploadFiles.service';
+import { UploadFilesDto } from 'uploadFiles/dto/uploadFiles.dto';
+import { FindUploadDto } from 'uploadFiles/dto/FindUpload.dto';
 
-@ApiTags('upload')
-@Controller('upload')
+@ApiTags('uploadFiles')
+@Controller('uploadFiles')
 export class UploadFilesController {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor(private readonly service: UploadFilesService) {}
 
   @Post()
@@ -39,8 +38,7 @@ export class UploadFilesController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files', null, multerDiskDestinationOutOptions))
   @ApiBody({
-    description: 'uploadFiles',
-    type: FilesUploadEntity,
+    type: UploadFilesDto,
   })
   @ApiBearerAuth('Access Token')
   @Member(true)
@@ -49,17 +47,13 @@ export class UploadFilesController {
   @ApiForbiddenResponse(CommonResponse.ForbiddenException())
   @ApiCreatedResponse(CommonResponse.CreatedResponse())
   @ApiBadRequestResponse(CommonResponse.BadRequestException())
-  async create(
-    @CurrentUser() { id }: UserEntity,
-    @UploadedFiles() files: Express.Multer.File[]
-    // @UploadedFiles() audioFiles: Express.Multer.File[]
-  ) {
+  async create(@CurrentUser() { id }: UserEntity, @UploadedFiles() files: Express.Multer.File[]) {
     return await this.service.create({ files, id });
   }
 
   @Get()
   @ApiOperation(CommonApiDocs.FindAllOperation())
-  @ApiOkResponse({ ...CommonResponse.FindAllOkResponse(), type: GetUploadDto })
+  @ApiOkResponse({ ...CommonResponse.FindAllOkResponse(), type: FindUploadDto })
   @ApiNotFoundResponse(CommonResponse.NotFoundException())
   @ApiBearerAuth('Access Token')
   @Member(true)
@@ -68,7 +62,6 @@ export class UploadFilesController {
   @ApiForbiddenResponse(CommonResponse.ForbiddenException())
   async findAll(@CurrentUser() { id }: UserEntity) {
     return await this.service.findAll(id);
-    // res.download(await this.service.getFileById(path));
   }
 
   @Get(':path')

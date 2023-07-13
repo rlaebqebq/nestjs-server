@@ -1,8 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Column, Entity } from 'typeorm';
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { Column, Entity, ManyToMany } from 'typeorm';
+import { IsString, IsUUID } from 'class-validator';
 
 import { CommonEntity } from 'common/common.entity';
+import { AttachFilesEntity } from 'attachFiles/attachFiles.entity';
 
 @Entity({
   name: 'upload_files',
@@ -17,17 +17,11 @@ export class UploadFilesEntity extends CommonEntity {
   })
   filename: string;
 
-  @ApiProperty({
-    example: '',
-  })
   @Column({
-    type: 'text',
+    type: 'varchar',
   })
   path: string;
 
-  @ApiProperty({
-    example: '',
-  })
   @Column({
     type: 'varchar',
   })
@@ -37,17 +31,8 @@ export class UploadFilesEntity extends CommonEntity {
     type: 'uuid',
   })
   @IsUUID()
-  own: string;
-}
+  userId: string;
 
-export class FileUploadEntity {
-  @ApiProperty({ type: 'string', format: 'binary' })
-  file: Express.Multer.File;
-}
-
-export class FilesUploadEntity {
-  @Column({ type: 'json', nullable: true })
-  @ApiProperty({ type: 'array', items: { type: 'string', format: 'binary' } })
-  @IsOptional()
-  files?: Express.Multer.File[];
+  @ManyToMany(() => AttachFilesEntity, (attachFile) => attachFile.uploadFiles)
+  attachFiles: AttachFilesEntity[];
 }

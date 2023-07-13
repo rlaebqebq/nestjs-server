@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { GetUploadDto } from './uploadFiles.dto';
-import { UploadFilesEntity } from './uploadFiles.entity';
+import { UploadFilesEntity } from 'uploadFiles/uploadFiles.entity';
+import { FindUploadDto } from 'uploadFiles/dto/FindUpload.dto';
+import { UploadFilesDto } from 'uploadFiles/dto/uploadFiles.dto';
 
 @Injectable()
 export class UploadFilesService {
@@ -12,37 +13,35 @@ export class UploadFilesService {
     private readonly upload: Repository<UploadFilesEntity>
   ) {}
 
-  async findOne(name: string) {
-    const file = await this.upload.findOneBy({ filename: name });
-    if (!file) {
-      throw new NotFoundException();
-    }
-    return file;
-  }
-
-  async create(params: { files: Express.Multer.File[]; id: string }): Promise<any> {
+  async create(params: { files: Express.Multer.File[]; id: string }): Promise<UploadFilesDto[]> {
     const { files, id } = params;
 
-    const adfe = files.map((item) => {
-      return this.saveLocalFileData({ fileData: item, own: id });
-    });
+    if (files.length < 1) throw new BadRequestException();
 
-    return await Promise.all(adfe);
+    const fileList = [];
+    for (const item of files) {
+      const fileData = await this.saveLocalFileData({ fileData: item, userId: id });
+      fileList.push(fileData);
+    }
+
+    return fileList.map((item) => {
+      return new UploadFilesDto(item);
+    });
   }
 
-  async saveLocalFileData(params: { fileData: Express.Multer.File; own: string }) {
+  async saveLocalFileData(params: { fileData: Express.Multer.File; userId: string }) {
     const {
       fileData: { filename, path, mimetype },
-      own,
+      userId,
     } = params;
 
-    const newFile = await this.upload.create({ filename, path, mimetype, own });
+    const newFile = await this.upload.create({ filename, path, mimetype, userId });
     await this.upload.save(newFile);
     return newFile;
   }
 
-  async findAll(id: string): Promise<GetUploadDto[]> {
-    const findall = await this.upload.find({ where: { own: id } });
-    return findall.map((i) => new GetUploadDto(i));
+  async findAll(id: string): Promise<FindUploadDto[]> {
+    const findall = await this.upload.find({ where: { userId: id } });
+    return findall.map((i) => new FindUploadDto(i));
   }
 }
