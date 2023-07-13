@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Column, Entity, OneToMany, RelationId } from 'typeorm';
 import { IsString, IsUUID } from 'class-validator';
+import { Exclude } from 'class-transformer';
 
 import { CommonEntity } from 'common/common.entity';
 import { ProjectEntity } from 'project/project.entity';
@@ -23,6 +24,7 @@ export class UserEntity extends CommonEntity {
   })
   email: string;
 
+  @Exclude()
   @ApiProperty({
     example: 'qwer1234!',
   })
@@ -34,6 +36,7 @@ export class UserEntity extends CommonEntity {
   })
   password: string;
 
+  @Exclude()
   @Column({
     type: 'boolean',
     default: false,
@@ -53,6 +56,7 @@ export class UserEntity extends CommonEntity {
   nickname: string;
 
   @ApiProperty({
+    description: 'upload 후 response 경로 입력',
     example: '',
   })
   @IsString()

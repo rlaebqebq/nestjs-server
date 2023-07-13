@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -21,22 +21,25 @@ import { AuthDto } from 'auth/auth.dto';
 import { JWTAuthGuard } from 'auth/jwt.guard';
 import { Member } from 'auth/auth.decorator';
 
-import { UserEntity } from './user.entity';
-import { UserApiDocs } from './user.docs';
-import { GetUserDto, JoinUserDto, UpdateUserDto } from './user.dto';
-import { UserService } from './user.service';
+import { UserEntity } from 'user/user.entity';
+import { UserApiDocs } from 'user/user.docs';
+import { UserService } from 'user/user.service';
+import { JoinUserDto } from 'user/dto/JoinUser.dto';
+import { UpdateUserDto } from 'user/dto/UpdateUser.dto';
+import { PublicUserDto } from 'user/dto/PublicUser.dto';
+import { UserDto } from 'user/dto/User.dto';
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService, private readonly authService: AuthService) {}
+  constructor(private readonly service: UserService, private readonly authService: AuthService) {}
 
   @Post('join')
   @ApiOperation(UserApiDocs.JoinOperation())
   @ApiCreatedResponse(CommonResponse.CreatedResponse())
   @ApiBadRequestResponse(CommonResponse.BadRequestException())
-  join(@Body() joinUserDto: JoinUserDto): Promise<void> {
-    return this.userService.join(joinUserDto);
+  join(@Body() joinUserDto: JoinUserDto): Promise<PublicUserDto> {
+    return this.service.join(joinUserDto);
   }
 
   @Post('login')
@@ -61,8 +64,8 @@ export class UserController {
   @ApiOkResponse(CommonResponse.OkResponse())
   @ApiBadRequestResponse(CommonResponse.BadRequestException())
   @ApiNotFoundResponse(CommonResponse.NotFoundException())
-  async update(@CurrentUser() { id }: UserEntity, @Body() update: UpdateUserDto) {
-    return this.userService.update(id, update);
+  update(@CurrentUser() { id }: UserEntity, @Body() update: UpdateUserDto): Promise<Partial<UpdateUserDto>> {
+    return this.service.update(id, update);
   }
 
   @ApiOperation(UserApiDocs.RetrieveOperation())
@@ -71,7 +74,20 @@ export class UserController {
   @ApiBearerAuth('Access Token')
   @UseGuards(JWTAuthGuard)
   @Get()
-  retrieve(@CurrentUser() user: UserEntity): GetUserDto {
-    return new GetUserDto(user);
+  findOne(@CurrentUser() { id }: UserEntity): Promise<UserDto> {
+    return this.service.findOne(id);
+  }
+
+  @Delete(':id')
+  @ApiOperation(CommonApiDocs.DeleteOperation())
+  @ApiOkResponse(CommonResponse.OkResponse())
+  @ApiUnauthorizedResponse(CommonResponse.UnauthorizedException())
+  @ApiForbiddenResponse(CommonResponse.ForbiddenException())
+  @ApiNotFoundResponse(CommonResponse.NotFoundException())
+  @ApiBearerAuth('Access Token')
+  @Member(true)
+  @UseGuards(JWTAuthGuard)
+  async remove(@CurrentUser() { id }: UserEntity) {
+    return await this.service.remove(id);
   }
 }

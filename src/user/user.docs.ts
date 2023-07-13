@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { UserDto } from './user.dto';
+import { PublicUserDto } from 'user/dto/PublicUser.dto';
 
 export class UserApiDocs {
   /** join api */
@@ -40,7 +40,7 @@ export class UserApiDocs {
     return {
       description: 'Ok',
       // type: responseFormatter(UserDto),
-      type: UserDto,
+      type: PublicUserDto,
     };
   }
 }

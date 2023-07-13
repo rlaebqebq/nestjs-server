@@ -6,8 +6,11 @@ import * as bcrypt from 'bcrypt';
 import { UploadFilesEntity } from 'uploadFiles/uploadFiles.entity';
 import { ProjectEntity } from 'project/project.entity';
 
-import { JoinUserDto, UpdateUserDto } from './user.dto';
-import { UserEntity } from './user.entity';
+import { UserEntity } from 'user/user.entity';
+import { JoinUserDto } from 'user/dto/JoinUser.dto';
+import { UpdateUserDto } from 'user/dto/UpdateUser.dto';
+import { PublicUserDto } from 'user/dto/PublicUser.dto';
+import { UserDto } from 'user/dto/User.dto';
 
 @Injectable()
 export class UserService {
@@ -22,7 +25,7 @@ export class UserService {
     private readonly project: Repository<ProjectEntity>
   ) {}
 
-  async join(joinUserDto: JoinUserDto) {
+  async join(joinUserDto: JoinUserDto): Promise<PublicUserDto> {
     const { email, password, nickname } = joinUserDto;
 
     const isEmailExist: number = await this.user.count({
@@ -39,9 +42,16 @@ export class UserService {
     const user = this.user.create({ ...joinUserDto, password: hasedPassword });
 
     await user.save();
+    return new PublicUserDto(user);
   }
 
-  async update(id: string, update: UpdateUserDto): Promise<UpdateUserDto> {
+  async findOne(id: string) {
+    const user = await this.user.findOne({ where: { id }, relations: ['projects'] });
+    if (!user) throw new NotFoundException(`NotFound ${id}`);
+    return new UserDto(user);
+  }
+
+  async update(id: string, update: UpdateUserDto): Promise<Partial<UpdateUserDto>> {
     const { password, nickname, avatarId } = update;
 
     if (password) update.password = await bcrypt.hash(update.password, 10);
@@ -52,7 +62,7 @@ export class UserService {
     }
 
     if (avatarId) {
-      const isHisOwn = await this.upload.findOne({ where: { own: id, path: avatarId } });
+      const isHisOwn = await this.upload.findOne({ where: { userId: id, path: avatarId } });
       if (!isHisOwn) throw new BadRequestException();
     }
 
@@ -69,6 +79,15 @@ export class UserService {
     if (isUserExist) await this.user.update({ id }, update);
     else throw new NotFoundException(`NotFound ${id}`);
 
-    return new UpdateUserDto(update);
+    return update;
+  }
+
+  async remove(id: string): Promise<UserDto> {
+    const user = await this.user.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(`NotFound ${id}`);
+
+    await user.softRemove();
+    await user.save();
+    return new UserDto(user);
   }
 }
