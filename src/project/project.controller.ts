@@ -22,8 +22,10 @@ import { CurrentUser } from 'auth/user.decorator';
 import { UserEntity } from 'user/user.entity';
 
 import { ProjectService } from './project.service';
-import { CreateProjectDto, ProjectDto, UpdateProjectDto } from './project.dto';
+import { ProjectDto } from 'project/dto/Project.dto';
 import { ProjectEntity } from './project.entity';
+import { CreateProjectDto } from 'project/dto/CreateProject.dto';
+import { UpdateProjectDto } from 'project/dto/UpdateProject.dto';
 
 @ApiTags('project')
 @Controller('project')
@@ -44,6 +46,7 @@ export class ProjectController {
   @ApiBadRequestResponse(CommonResponse.BadRequestException())
   @Post()
   async create(@CurrentUser() { id }: UserEntity, @Body() create: CreateProjectDto) {
+    // console.log(create);
     return this.service.create({ create, id });
   }
 
@@ -61,28 +64,6 @@ export class ProjectController {
     @Query('orderBy') orderBy?: string
   ) {
     return await this.service.findAll({ search, view, pageParam, orderBy });
-  }
-
-  @Get('own')
-  @ApiOperation(CommonApiDocs.FindAllOperation())
-  @ApiOkResponse({ ...CommonResponse.FindAllOkResponse(), type: ProjectEntity })
-  @ApiBearerAuth('Access Token')
-  @Member(true)
-  @UseGuards(JWTAuthGuard)
-  @ApiUnauthorizedResponse(CommonResponse.UnauthorizedException())
-  @ApiForbiddenResponse(CommonResponse.ForbiddenException())
-  @ApiQuery({ name: 'search', type: String, required: false })
-  @ApiQuery({ name: 'view', type: Number, required: false })
-  @ApiQuery({ name: 'pageParam', type: Number, required: false })
-  @ApiQuery({ name: 'orderBy', type: String, required: false })
-  async findAllMine(
-    @CurrentUser() { id }: UserEntity,
-    @Query('search') search?: string,
-    @Query('view') view?: number,
-    @Query('pageParam') pageParam?: number,
-    @Query('orderBy') orderBy?: string
-  ) {
-    return await this.service.findAll({ id, search, view, pageParam, orderBy });
   }
 
   @Get(':id')

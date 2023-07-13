@@ -1,26 +1,27 @@
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  CreateDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
-import { IsDateString, IsNotEmpty, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 import { CommonEntity } from 'common/common.entity';
 import { UserEntity } from 'user/user.entity';
 import { BookmarkEntity } from 'bookmark/bookmark.entity';
+import { AttachFilesEntity } from 'attachFiles/attachFiles.entity';
 
 @Entity({
   name: 'project',
   schema: 'public',
 })
 export class ProjectEntity extends CommonEntity {
-  @ApiProperty({ required: true })
+  @ApiProperty({ type: 'boolean', required: true })
+  @Column({
+    type: 'boolean',
+  })
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  isPublic: boolean;
+
+  @ApiProperty({ type: 'string', required: true })
   @Column({
     type: 'varchar',
     length: 20,
@@ -59,19 +60,6 @@ export class ProjectEntity extends CommonEntity {
   published: Date;
 
   @Column({
-    type: 'simple-array',
-  })
-  @ApiProperty({ type: 'array', items: { type: 'string' }, required: true })
-  @IsString({ each: true })
-  @IsNotEmpty()
-  imageFiles: string;
-
-  @Column({
-    type: 'varchar',
-  })
-  thumbnail?: string;
-
-  @Column({
     type: 'int',
     default: 0,
   })
@@ -85,22 +73,20 @@ export class ProjectEntity extends CommonEntity {
 
   @OneToMany(() => BookmarkEntity, (i: BookmarkEntity) => i.project, {
     nullable: false,
+    onDelete: 'CASCADE',
   })
-  @IsUUID()
   bookmarks: BookmarkEntity[];
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, (i: UserEntity) => i.id)
   @JoinColumn({ name: 'user_id' })
   user: UserEntity;
 
-  @BeforeInsert()
-  @BeforeUpdate()
-  setThumbnailFromImageFiles() {
-    if (this.imageFiles) {
-      const imageArray = this.imageFiles.split(',');
-      if (Array.isArray(imageArray) && imageArray.length > 0) {
-        this.thumbnail = imageArray[0];
-      }
-    }
-  }
+  @OneToMany(() => AttachFilesEntity, (i: AttachFilesEntity) => i.project, { onDelete: 'CASCADE' })
+  attachFiles: AttachFilesEntity[];
+
+  @Column({
+    type: 'varchar',
+    default: '',
+  })
+  thumbnail?: string;
 }
